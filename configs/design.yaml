@@ -1,0 +1,11 @@
+# Pre-registered design (see docs/PREREGISTRATION.md). Do not change after data collection starts.
+items: data/mmlu_570.jsonl          # 10 items per MMLU subject, seed 0
+models: [llama3.2:3b, qwen2.5:3b, qwen2.5:7b, qwen3:4b-instruct-2507-q4_K_M]
+templates: [plain, mmlu, paren]
+rotations: [0, 1, 2, 3]            # cyclic option shifts; correct answer visits A, B, C, D once each
+retest:                            # sampled runs of one fixed prompt
+  template: plain
+  rotation: 0
+  temperature: 0.7
+  seeds: [1, 2, 3]
+benchmark_size: 14042              # full MMLU test set, for the extrapolated MDD

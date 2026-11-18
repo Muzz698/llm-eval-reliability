@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evalrel"
+version = "0.1.0"
+description = "Psychometric reliability checks for LLM benchmark scores: order effects, prompt-format sensitivity, test-retest, minimal detectable difference."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Muzamil"}]
+requires-python = ">=3.10"
+dependencies = ["numpy", "pandas", "scipy", "matplotlib", "requests", "pyyaml"]
+
+[project.optional-dependencies]
+mmlu = ["datasets"]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+evalrel = "evalrel.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
