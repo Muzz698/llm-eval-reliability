@@ -31,7 +31,7 @@ The primary outcome was the minimal detectable difference (MDD) between two mode
 
 ## 2.1 Pre-registration
 
-The design file, analysis code and pre-registration document were frozen in a public commit before the main run (commit `a1e207b` of the code repository) and registered on the Open Science Framework. A 40-item pilot with all four models was used only to check the pipeline and the time cost, and its data are not analysed. The pilot showed one problem. With the original MMLU framing, which ends in "Answer:" with no instruction, models often wrote sentences instead of letters, so up to 100% of responses could not be scored. All templates were therefore given the same final instruction before registration.
+The design file, analysis code and pre-registration document (hypotheses, tests and primary outcome) were frozen in a public, time-stamped commit before the main run (commit `a1e207b` of the code repository). The same plan was entered on the Open Science Framework (https://osf.io/h7kpy). Because of a miscommunication about whether that form had already been submitted, the OSF record was submitted after the pre-specified analysis had been run. Its content matches the frozen commit, no part of the plan was changed after data collection began, and all results are reported, including the unsupported hypothesis. A 40-item pilot with all four models was used only to check the pipeline and the time cost, and its data are not analysed. The pilot showed one problem. With the original MMLU framing, which ends in "Answer:" with no instruction, models often wrote sentences instead of letters, so up to 100% of responses could not be scored. All templates were therefore given the same final instruction before registration.
 
 ## 2.2 Models
 
@@ -169,7 +169,7 @@ The `evalrel` tool produces all of these from one command.
 
 # Data and code availability
 
-All code, prompts, raw responses, analysis outputs and figures are available at https://github.com/Muzz698/llm-eval-reliability. The pre-registration is in `docs/PREREGISTRATION.md` (frozen at commit `a1e207b`) and on the Open Science Framework. The repository includes automated tests, and every result can be reproduced on a laptop with free software.
+All code, prompts, raw responses, analysis outputs and figures are available at https://github.com/Muzz698/llm-eval-reliability. The pre-registration is in `docs/PREREGISTRATION.md` (frozen at commit `a1e207b`) and at https://osf.io/h7kpy. The repository includes automated tests, and every result can be reproduced on a laptop with free software.
 
 # Author contributions and use of AI tools
 

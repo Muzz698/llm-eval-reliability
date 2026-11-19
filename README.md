@@ -4,7 +4,7 @@
 
 Benchmark scores are usually reported from one run, with one prompt template and one option order. Psychometrics treats a score as an observation that contains measurement error. This project measures that error and turns it into a practical question: **how large does a difference between two models need to be before it is real?**
 
-- Pre-registration: [`docs/PREREGISTRATION.md`](docs/PREREGISTRATION.md), frozen in commit `a1e207b` before data collection and registered on OSF
+- Pre-registration: [`docs/PREREGISTRATION.md`](docs/PREREGISTRATION.md), frozen in commit `a1e207b` before data collection; OSF record: https://osf.io/h7kpy
 - Paper draft: [`paper/paper.pdf`](paper/paper.pdf)
 - Author: Muzamil (independent researcher)
 
@@ -80,7 +80,7 @@ By design, each letter is correct 25% of the time. llama3.2:3b picks C 35% of th
 
 ### Deviations from the pre-registration
 
-None in the design or the tests. The H2 item-sampling SE and the sensitivity analysis were computed with a short script outside `evalrel analyze`, using the formulas pre-registered.
+The design, hypotheses and analysis code were frozen in public commit `a1e207b` before data collection; that commit is the time-stamped pre-registration. The matching OSF record (https://osf.io/h7kpy) was submitted after the pre-specified analysis had been run, because of a miscommunication about whether it had already been submitted; nothing in the plan was changed. None in the design or the tests. The H2 item-sampling SE and the sensitivity analysis were computed with a short script outside `evalrel analyze`, using the formulas pre-registered.
 
 ### Limitations
 

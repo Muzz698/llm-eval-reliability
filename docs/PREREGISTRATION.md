@@ -53,3 +53,6 @@ The items, models, templates, orders, scoring rule, hypotheses and tests above. 
 - Sclar, M., et al. (2024). Quantifying language models' sensitivity to spurious features in prompt design. *ICLR*.
 - Weir, J. P. (2005). Quantifying test-retest reliability using the intraclass correlation coefficient and the SEM. *J. Strength Cond. Res.*, 19(1).
 - Zheng, C., et al. (2024). Large language models are not robust multiple choice selectors. *ICLR*.
+
+## Note added after data collection
+OSF record: https://osf.io/h7kpy. It was submitted after the analysis had been run, because of a miscommunication about whether it had already been submitted. This file, frozen in commit `a1e207b` before data collection, is the time-stamped pre-registration, and its content was not changed.
