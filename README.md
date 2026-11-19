@@ -5,6 +5,7 @@
 Benchmark scores are usually reported from one run, with one prompt template and one option order. Psychometrics treats a score as an observation that contains measurement error. This project measures that error and turns it into a practical question: **how large does a difference between two models need to be before it is real?**
 
 - Pre-registration: [`docs/PREREGISTRATION.md`](docs/PREREGISTRATION.md), frozen in commit `a1e207b` before data collection and registered on OSF
+- Paper draft: [`paper/paper.pdf`](paper/paper.pdf)
 - Author: Muzamil (independent researcher)
 
 ## Design

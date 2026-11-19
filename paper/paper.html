@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How reliable is an MMLU score? A pre-registered generalizability-theory audit of small open language models</title>
+<style>
+@page { size: A4; margin: 1.7cm 1.9cm; }
+body { font-family: "Times New Roman", Times, serif; font-size: 10pt; line-height: 1.33; color: #000; margin: 0; }
+h1.title { font-size: 15pt; text-align: center; margin: 0 0 8pt; line-height: 1.25; }
+.meta { text-align: center; font-size: 10pt; margin-bottom: 2pt; }
+.abstract { margin: 12pt 1.2cm 8pt; font-size: 9.5pt; text-align: justify; }
+.abstract p { margin: 0; }
+.kw { margin: 0 1.2cm 14pt; font-size: 9pt; }
+h1, h2 { page-break-after: avoid; } h1 { font-size: 12pt; margin: 14pt 0 4pt; }
+h2 { font-size: 10.5pt; font-style: italic; margin: 10pt 0 3pt; }
+p { margin: 0 0 6pt; text-align: justify; }
+ul, ol { margin: 0 0 6pt; padding-left: 18pt; }
+li { margin-bottom: 2pt; }
+figure { margin: 8pt 0; text-align: center; page-break-inside: avoid; }
+figure img { max-width: 100%; }
+figcaption { font-size: 9pt; text-align: left; margin-top: 3pt; }
+table { border-collapse: collapse; width: 100%; font-size: 8.8pt; margin: 4pt 0 2pt; page-break-inside: avoid; border-top: 1.2pt solid #000; border-bottom: 1.2pt solid #000; }
+caption { caption-side: top; text-align: left; font-size: 9pt; margin-bottom: 3pt; }
+th { border-bottom: 0.7pt solid #000; text-align: left; padding: 2pt 4pt; }
+td { padding: 2pt 4pt; }
+code { font-size: 9pt; }
+#references ~ p, h1#references ~ p { padding-left: 18pt; text-indent: -18pt; font-size: 9.5pt; text-align: left; margin-bottom: 3pt; }
+</style>
+</head>
+<body>
+<h1 class="title">How reliable is an MMLU score? A pre-registered generalizability-theory audit of small open language models</h1>
+<div class="meta">Muzamil</div>
+<div class="meta">Independent researcher · Correspondence: muzamilrajper@outlook.com</div>
+<div class="meta">Code and data: https://github.com/Muzz698/llm-eval-reliability · November 2026</div>
+<div class="abstract"><b>Abstract.</b> <p>Benchmark scores for large language models (LLMs) are usually reported from a single run, with one prompt template and one order of the answer options, as if they were free of measurement error. I applied generalizability theory, the psychometric framework for partitioning score variance into its sources, to MMLU. Four small open models (llama3.2:3b, qwen2.5:3b, qwen2.5:7b and qwen3:4b-instruct) answered 570 stratified MMLU items under a fully crossed design of 3 prompt templates × 4 cyclic option orders, plus 3 sampled retest runs (34,200 responses). The design and analysis plan were pre-registered. Accuracy differed across the 12 format conditions for two of the four models (Cochran’s Q, Holm-corrected p = .003 and .027), with ranges of 2.8 to 6.3 percentage points per model. Every model chose some answer letters more than others even though correct answers were balanced by design (all p &lt; .003; for llama3.2, Cohen’s w = 0.27). In the G-study, the item × option-order interaction explained 17–24% of the variance in item correctness, far more than template effects. Extrapolated to the full 14,042-item test, the standard error of measurement due to format (0.8–1.8 points) was 2 to 4.6 times the binomial item-sampling error that confidence intervals usually report. The resulting minimal detectable difference between two single-format runs was 2.3 to 4.9 points at full MMLU size. Differences smaller than this are within format noise, and adding items does not remove it. I release <code>evalrel</code>, an open tool that runs the same audit on any multiple-choice benchmark.</p></div>
+<div class="kw"><b>Keywords:</b> large language models; benchmark evaluation; generalizability theory; measurement error; reliability; MMLU; pre-registration</div>
+<h1 id="introduction">1. Introduction</h1>
+<p>LLMs are compared and ranked mainly by their scores on benchmarks such as MMLU (Hendrycks et al., 2021). A typical report gives one number per model, computed with one prompt template and one fixed order of the answer options. When an uncertainty estimate is given at all, it is usually the binomial standard error over items, which treats the items as the only source of error.</p>
+<p>Psychometrics has a different starting point. An observed score is a measurement, and a measurement contains error from every aspect of the procedure that could have been otherwise (Brennan, 2001). For a multiple-choice benchmark, the order of the options and the layout of the prompt are such aspects. A test-taker who knows the answer should not care whether it is listed as A or as D, or whether the options are written “A.” or “(A)”. If scores change with these choices, part of what a benchmark measures is the format, not the ability.</p>
+<p>The fact that LLM scores are sensitive to option order and prompt format is not new. Models prefer particular answer letters (Zheng et al., 2024; Pezeshkpour &amp; Hruschka, 2024), small changes in prompt formatting can move accuracy by many points (Sclar et al., 2024), and such perturbations can reorder leaderboards (Alzahrani et al., 2024). What is missing is a way to turn these findings into the quantities a psychometrician would report: how much of the score variance each source contributes, the standard error of measurement (SEM) that results, and the smallest difference between two scores that can be trusted.</p>
+<p>This study provides those quantities for MMLU and four small open models. Generalizability theory (G-theory) is the natural framework, because it treats the item, the template and the option order as random facets of one fully crossed design and estimates their variance components together. I asked:</p>
+<ol type="1">
+<li>Does accuracy depend on the template and option order (H1)?</li>
+<li>Is the error due to format larger than the item-sampling error that is usually reported, even at the full size of the benchmark (H2)?</li>
+<li>Do models prefer some answer letters when correct answers are balanced (H3)?</li>
+<li>Do models whose overall difference is uncertain change rank across formats (H4)?</li>
+</ol>
+<p>The primary outcome was the minimal detectable difference (MDD) between two models’ scores. The hypotheses, design and analyses were pre-registered before the main data were collected.</p>
+<h1 id="methods">2. Methods</h1>
+<h2 id="pre-registration">2.1 Pre-registration</h2>
+<p>The design file, analysis code and pre-registration document were frozen in a public commit before the main run (commit <code>a1e207b</code> of the code repository) and registered on the Open Science Framework. A 40-item pilot with all four models was used only to check the pipeline and the time cost, and its data are not analysed. The pilot showed one problem. With the original MMLU framing, which ends in “Answer:” with no instruction, models often wrote sentences instead of letters, so up to 100% of responses could not be scored. All templates were therefore given the same final instruction before registration.</p>
+<h2 id="models">2.2 Models</h2>
+<p>I tested llama3.2:3b, qwen2.5:3b, qwen2.5:7b and qwen3:4b-instruct-2507 (4-bit quantised, q4_K_M). All were run locally with Ollama 0.40.16 in chat mode, with reasoning (“thinking”) disabled and a limit of 8 generated tokens. Facet conditions used greedy decoding (temperature 0).</p>
+<h2 id="items">2.3 Items</h2>
+<p>I drew 570 items from the MMLU test set, 10 at random from each of its 57 subjects (seed 0). Stratifying by subject keeps the sample’s composition close to the full test of 14,042 items.</p>
+<h2 id="design">2.4 Design</h2>
+<p>The facet arm crossed every item with 3 templates and 4 option orders, giving 12 conditions per item.</p>
+<ul>
+<li><strong>Templates.</strong> <code>plain</code> lists the question and the options as “A. …”. <code>mmlu</code> adds the original paper’s framing, “The following is a multiple choice question about {subject}.” <code>paren</code> labels the question and lists the options as “(A) …”. All three end with “Answer with the letter of the correct option only.” The templates differ in layout and framing, not in what is asked.</li>
+<li><strong>Option orders.</strong> Four cyclic shifts of the original options were used. Each item’s correct answer therefore appears exactly once in each position A–D, so correct answers are uniform over letters by construction.</li>
+</ul>
+<p>The retest arm used the <code>plain</code> template with the original option order at temperature 0.7, with seeds 1–3, to estimate sampling stability.</p>
+<p><strong>Scoring.</strong> A deliberately strict parser took the first clearly stated letter A–D: at the start of the response, after “answer is”, or in parentheses. A bare “A” opening a sentence (“A cell is…”) was not counted. Responses that could not be parsed were scored as wrong. Each model gave 8,550 responses, so there were 34,200 in total.</p>
+<h2 id="analysis">2.5 Analysis</h2>
+<p><strong>G-study.</strong> For each model, I fitted a random-effects G-study to the 0/1 correctness scores in the fully crossed items (<em>i</em>) × templates (<em>t</em>) × orders (<em>r</em>) design, with one observation per cell. Variance components were estimated from the expected mean squares, and negative estimates were set to 0 (Brennan, 2001). Components are reported as shares of the total variance.</p>
+<p><strong>SEM due to format.</strong> The standard error of a model’s accuracy across arbitrary formats, for a test of <em>n</em> items, is</p>
+<p>SEM<sub>format</sub> = √(σ²<sub>t</sub> + σ²<sub>r</sub> + σ²<sub>tr</sub> + (σ²<sub>it</sub> + σ²<sub>ir</sub> + σ²<sub>itr,e</sub>) / <em>n</em>).</p>
+<p>The first three terms do not shrink as <em>n</em> grows: a template or option order that helps the model helps it on every item. SEM<sub>format</sub> was computed at <em>n</em> = 570 and extrapolated to <em>n</em> = 14,042.</p>
+<p><strong>MDD.</strong> The minimal detectable difference between two scores at 95% confidence is MDD<sub>95</sub> = 1.96 × √2 × SEM<sub>format</sub> (Weir, 2005).</p>
+<p><strong>Tests.</strong></p>
+<ul>
+<li>H1: Cochran’s Q across the 12 conditions, per model.</li>
+<li>H2: SEM<sub>format</sub> compared with the binomial item-sampling error √(<em>p</em>(1 − <em>p</em>)/<em>n</em>) at <em>n</em> = 14,042, per model.</li>
+<li>H3: χ² goodness of fit of the chosen letters against a uniform distribution, with effect size <em>w</em> = √(χ²/<em>N</em>).</li>
+<li>H4: For each pair of models, a paired item bootstrap (2,000 resamples) of the overall difference, and a count of the conditions in which each model ranked higher.</li>
+</ul>
+<p>H1 and H3 were Holm-corrected across the four models, with α = .05.</p>
+<p><strong>Exploratory analyses</strong>, labelled as such:</p>
+<ul>
+<li>The share of items that change correctness across conditions</li>
+<li>Whether the same option content was chosen under all four orders</li>
+<li>Fleiss’ κ across the three retest runs</li>
+<li>Parse rates</li>
+<li>A sensitivity analysis that excludes unparsed responses</li>
+</ul>
+<h1 id="results">3. Results</h1>
+<h2 id="accuracy-depends-on-format-h1">3.1 Accuracy depends on format (H1)</h2>
+<table>
+<caption>Table 1. Accuracy (%) over the 12 template × option-order conditions, and Cochran’s Q test of equality (df = 11). The item-sampling SE is the binomial standard error of one condition at <em>n</em> = 570.</caption>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Mean</th>
+<th>SD</th>
+<th>Min</th>
+<th>Max</th>
+<th>Range</th>
+<th>Item-sampling SE</th>
+<th>Q</th>
+<th><em>p</em><sub>Holm</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>llama3.2:3b</td>
+<td>55.8</td>
+<td>2.0</td>
+<td>53.2</td>
+<td>58.8</td>
+<td>5.6</td>
+<td>2.1</td>
+<td>21.2</td>
+<td>.062</td>
+</tr>
+<tr class="even">
+<td>qwen2.5:3b</td>
+<td>62.5</td>
+<td>0.9</td>
+<td>60.9</td>
+<td>63.7</td>
+<td>2.8</td>
+<td>2.0</td>
+<td>6.0</td>
+<td>.876</td>
+</tr>
+<tr class="odd">
+<td>qwen2.5:7b</td>
+<td>71.8</td>
+<td>1.7</td>
+<td>69.1</td>
+<td>74.6</td>
+<td>5.4</td>
+<td>1.9</td>
+<td>25.0</td>
+<td>.027</td>
+</tr>
+<tr class="even">
+<td>qwen3:4b-instruct</td>
+<td>68.7</td>
+<td>1.8</td>
+<td>64.6</td>
+<td>70.9</td>
+<td>6.3</td>
+<td>1.9</td>
+<td>32.5</td>
+<td>.003</td>
+</tr>
+</tbody>
+</table>
+<p>Accuracy differed significantly across conditions for qwen3:4b-instruct and qwen2.5:7b, so H1 was supported (Table 1, Figure 1). For three of the four models, the best and worst condition differed by more than 5 points. qwen2.5:3b was the exception: its accuracy varied by less than 3 points and its test was far from significant.</p>
+<figure>
+<img src="../results/main/accuracy_by_condition.png" style="width:60.0%" alt="Accuracy of each model under each of the 12 combinations of prompt template (marker) and option order. The line spans the range for each model." /><figcaption aria-hidden="true">Accuracy of each model under each of the 12 combinations of prompt template (marker) and option order. The line spans the range for each model.</figcaption>
+</figure>
+<h2 id="format-error-does-not-average-out-h2">3.2 Format error does not average out (H2)</h2>
+<figure>
+<img src="../results/main/variance_shares.png" style="width:60.0%" alt="Variance components of item correctness from the G-study, as shares of the total variance." /><figcaption aria-hidden="true">Variance components of item correctness from the G-study, as shares of the total variance.</figcaption>
+</figure>
+<table>
+<caption>Table 2. G-study variance components (% of total), standard error of measurement due to format, and minimal detectable difference (percentage points). Columns: <em>i</em> = item, <em>ir</em> = item × order, <em>it</em> = item × template, <em>t</em> = template, <em>r</em> = order, <em>itr,e</em> = residual. Full = extrapolated to all 14,042 MMLU test items.</caption>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th><em>i</em></th>
+<th><em>ir</em></th>
+<th><em>it</em></th>
+<th><em>t</em></th>
+<th><em>r</em></th>
+<th><em>itr,e</em></th>
+<th>SEM<sub>570</sub></th>
+<th>SEM<sub>full</sub></th>
+<th>Item SE<sub>full</sub></th>
+<th>MDD<sub>570</sub></th>
+<th>MDD<sub>full</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>llama3.2:3b</td>
+<td>49.1</td>
+<td>23.3</td>
+<td>3.8</td>
+<td>0.0</td>
+<td>0.1</td>
+<td>23.8</td>
+<td>2.2</td>
+<td>1.6</td>
+<td>0.42</td>
+<td>6.0</td>
+<td>4.4</td>
+</tr>
+<tr class="even">
+<td>qwen2.5:3b</td>
+<td>58.7</td>
+<td>22.2</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>17.1</td>
+<td>1.5</td>
+<td>0.8</td>
+<td>0.41</td>
+<td>4.2</td>
+<td>2.3</td>
+</tr>
+<tr class="odd">
+<td>qwen2.5:7b</td>
+<td>60.7</td>
+<td>23.9</td>
+<td>1.5</td>
+<td>0.0</td>
+<td>0.1</td>
+<td>13.8</td>
+<td>2.0</td>
+<td>1.6</td>
+<td>0.38</td>
+<td>5.4</td>
+<td>4.4</td>
+</tr>
+<tr class="even">
+<td>qwen3:4b-instruct</td>
+<td>66.8</td>
+<td>17.3</td>
+<td>2.8</td>
+<td>0.1</td>
+<td>0.0</td>
+<td>13.0</td>
+<td>2.1</td>
+<td>1.8</td>
+<td>0.39</td>
+<td>5.8</td>
+<td>4.9</td>
+</tr>
+</tbody>
+</table>
+<p>Items were the largest source of variance (49–67%), as they should be for a test that discriminates between easy and hard questions (Table 2, Figure 2). The second largest source was the <strong>item × option order</strong> interaction (17–24%). Whether a model answered a particular item correctly depended strongly on where that item’s options were placed, and the direction of this effect differed from item to item. Template effects were small: the main effect was at most 0.1% and item × template was 1.5–3.8%. The template × order interaction was essentially 0 for all models.</p>
+<p>The template and order main effects were small as shares of variance, but they matter most at scale, because they do not shrink as items are added. At the full size of MMLU, SEM<sub>format</sub> was 0.8 to 1.8 points. This is 2.0 to 4.6 times the binomial item-sampling error (0.38–0.42 points), so H2 was supported for every model. A confidence interval based on items alone understates the uncertainty of a full-MMLU score by that factor.</p>
+<p>The minimal detectable difference between two single-format runs was 4.2 to 6.0 points on the 570-item sample and 2.3 to 4.9 points on the full test.</p>
+<h2 id="models-prefer-answer-letters-h3">3.3 Models prefer answer letters (H3)</h2>
+<figure>
+<img src="../results/main/letter_choice.png" style="width:50.0%" alt="Distribution of chosen answer letters. By design, each letter was correct in 25% of trials (dashed line)." /><figcaption aria-hidden="true">Distribution of chosen answer letters. By design, each letter was correct in 25% of trials (dashed line).</figcaption>
+</figure>
+<p>Every model’s choices departed from the uniform distribution guaranteed by the design (all <em>p</em><sub>Holm</sub> &lt; .003), so H3 was supported (Figure 3). The effect was large for llama3.2:3b (<em>w</em> = 0.27). It chose C on 35.0% of trials and A on only 18.3%, and its accuracy was 70.4% when the correct answer was in position C but 47.9% when it was in position A. qwen3:4b-instruct preferred the later letters C and D (<em>w</em> = 0.10), and its accuracy ranged from 67.1% (answer at A) to 76.7% (answer at C). The two qwen2.5 models showed only small biases (<em>w</em> ≈ 0.05).</p>
+<h2 id="rankings-h4">3.4 Rankings (H4)</h2>
+<p>All six pairs of models had overall differences whose 95% bootstrap confidence interval excluded 0. The pre-registered condition for H4 (a pair whose interval includes 0) was therefore never met, and H4 was not supported. Five pairs kept the same order in all 12 conditions.</p>
+<p>The sixth pair is informative as an exploratory observation. qwen2.5:7b outscored qwen3:4b-instruct by 3.0 points overall (95% CI 0.6 to 5.6). This difference would be called significant in a standard report, yet qwen3:4b-instruct ranked higher in 1 of the 12 conditions, where the difference ranged from −0.7 to +5.8 points. A difference of this size lies within the MDD from section 3.2.</p>
+<h2 id="exploratory-analyses">3.5 Exploratory analyses</h2>
+<p><strong>Item-level instability.</strong> Under at least one of the 12 conditions, 32% (qwen3:4b-instruct) to 59% (llama3.2:3b) of items changed from correct to incorrect or back. The same option content was chosen under all four orders for only 44% to 68% of items.</p>
+<p><strong>Retest.</strong> With sampling at temperature 0.7, the three qwen models were stable (Fleiss’ κ = 0.90–0.95), but llama3.2:3b was not (κ = 0.57; all three runs agreed on 51% of items).</p>
+<p><strong>Parsing.</strong> The qwen2.5 models produced a scorable letter on 99.8–100% of trials. llama3.2:3b did so on 95–99% and qwen3:4b-instruct on 91–97%, with the lowest rate under the <code>paren</code> template.</p>
+<p><strong>Sensitivity analysis.</strong> Excluding unparsed responses raised qwen3’s accuracy from 68.7% to 72.8% and llama3.2’s from 55.8% to 57.6%. The standard deviation across conditions remained between 0.9 and 2.0 points, so the conclusions do not depend on how unparsed responses were scored.</p>
+<h1 id="discussion">4. Discussion</h1>
+<p>A single MMLU score from one template and one option order is a noisy measurement, and the usual confidence interval hides most of the noise. For the four models studied, the error introduced by arbitrary formatting choices was two to five times larger than the item-sampling error at the full benchmark size. Two scores from single-format runs need to differ by roughly 2 to 5 points before the difference exceeds format noise.</p>
+<p>G-theory explains why more items do not solve the problem. Most of the format-related variance is an interaction with items: a given option order helps on some items and hurts on others, and this part does average out over many items. What remains is the smaller set of main effects, a template or an order that shifts every item in the same direction. These effects are a fraction of a percent of the variance, but they do not shrink with <em>n</em>, so at 14,042 items they dominate the error. The usual binomial standard error, which falls as 1/√<em>n</em>, is the wrong error model for a test whose format was fixed once.</p>
+<p>The size of the item × order component (17–24%) also says something about the models as test-takers. A human who knows an answer finds it wherever it is listed. For these models, a substantial fraction of correct answers on individual items depend on position, and for llama3.2:3b a strong preference for C means that its score partly reflects how often the answer happens to be C. Counterbalancing the option order, as done here, removes this bias from the mean score but not from the variance.</p>
+<p>The models differed considerably in reliability. qwen2.5:3b was the most format-robust (MDD 2.3 points at full size) despite being one of the smaller models, while qwen3:4b-instruct had higher accuracy but the largest format error. Reliability is therefore a property worth reporting alongside accuracy, not something that comes automatically with performance.</p>
+<p><strong>Recommendations.</strong> These follow from the analysis and match standard psychometric practice.</p>
+<ol type="1">
+<li>Report scores averaged over several option orders, preferably all cyclic shifts, and several templates.</li>
+<li>Report the spread across those conditions together with the mean.</li>
+<li>Treat differences smaller than the MDD as unresolved.</li>
+</ol>
+<p>The <code>evalrel</code> tool produces all of these from one command.</p>
+<h1 id="limitations">5. Limitations</h1>
+<p><strong>Models and setup.</strong> Only four small, quantised models were tested, through one runtime, zero-shot, and scored by parsing a generated letter rather than comparing log-probabilities. Larger models may be more robust, and log-probability scoring removes parsing failures, though it does not remove position bias (Zheng et al., 2024).</p>
+<p><strong>Templates.</strong> Three templates are a narrow sample of the formats in use. Because all three end with the same instruction, the template variance is probably an underestimate, and the format SEM is better read as a lower bound.</p>
+<p><strong>Scope of the extrapolation.</strong> The full-size estimates assume that the variance components from 570 items hold for the whole test.</p>
+<p><strong>H4.</strong> The rank-flip hypothesis was conditioned on pairs with uncertain differences, which these four well-separated models did not provide. A test with more models of similar ability would be more informative.</p>
+<h1 id="data-and-code-availability">Data and code availability</h1>
+<p>All code, prompts, raw responses, analysis outputs and figures are available at https://github.com/Muzz698/llm-eval-reliability. The pre-registration is in <code>docs/PREREGISTRATION.md</code> (frozen at commit <code>a1e207b</code>) and on the Open Science Framework. The repository includes automated tests, and every result can be reproduced on a laptop with free software.</p>
+<h1 id="author-contributions-and-use-of-ai-tools">Author contributions and use of AI tools</h1>
+<p>Muzamil conceived the study, chose the psychometric framing and the benchmark, decided which facets to vary, pre-registered the hypotheses, ran all experiments on local hardware, checked the results against the raw data, and wrote and approved the final manuscript. An AI assistant (Claude, Anthropic) was used as a programming and writing tool, to implement analysis code to the author’s specification and to edit the text. All scientific decisions and interpretations are the author’s, and the author takes full responsibility for the content.</p>
+<h1 id="references">References</h1>
+<p>Alzahrani, N., Alyahya, H. A., Alnumay, Y., et al. (2024). When benchmarks are targets: Revealing the sensitivity of large language model leaderboards. <em>Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics</em>.</p>
+<p>Brennan, R. L. (2001). <em>Generalizability theory</em>. Springer.</p>
+<p>Hendrycks, D., Burns, C., Basart, S., Zou, A., Mazeika, M., Song, D., &amp; Steinhardt, J. (2021). Measuring massive multitask language understanding. <em>International Conference on Learning Representations</em>.</p>
+<p>Pezeshkpour, P., &amp; Hruschka, E. (2024). Large language models sensitivity to the order of options in multiple-choice questions. <em>Findings of the Association for Computational Linguistics: NAACL 2024</em>.</p>
+<p>Sclar, M., Choi, Y., Tsvetkov, Y., &amp; Suhr, A. (2024). Quantifying language models’ sensitivity to spurious features in prompt design. <em>International Conference on Learning Representations</em>.</p>
+<p>Weir, J. P. (2005). Quantifying test-retest reliability using the intraclass correlation coefficient and the SEM. <em>Journal of Strength and Conditioning Research, 19</em>(1), 231–240.</p>
+<p>Zheng, C., Zhou, H., Meng, F., Zhou, J., &amp; Huang, M. (2024). Large language models are not robust multiple choice selectors. <em>International Conference on Learning Representations</em>.</p>
+</body>
+</html>
